@@ -1,0 +1,6 @@
+serverdeploy/vars.secure  filter=git-crypt diff=git-crypt
+serverdeploy/ssl.key  filter=git-crypt diff=git-crypt
+serverdeploy/ssl_cert/01.ssl.crt  filter=git-crypt diff=git-crypt
+serverdeploy/ssl-pass-phrase  filter=git-crypt diff=git-crypt
+.gitattributes !filter !diff
+

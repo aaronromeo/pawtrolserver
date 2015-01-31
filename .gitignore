@@ -1,0 +1,9 @@
+.env
+*.pyc
+
+frontend/bower_components
+frontend/node_modules
+*.swp
+kromeo2015_django_debug.log
+/static/
+npm-debug.log
