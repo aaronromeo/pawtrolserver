@@ -16,6 +16,7 @@ Also required to run locally is a .env file with the following values defined
     export BASEURL="http://localhost:8000"
 
 DB creation for maximum awesome...
+
     CREATE USER [DB_USER] WITH ENCRYPTED PASSWORD '[DB_PASS]' CREATEDB;
     CREATE DATABASE [DB_NAME] WITH ENCODING 'UTF-8' OWNER "[DB_USER]";
     GRANT ALL PRIVILEGES ON DATABASE [DB_NAME] TO [DB_USER];
