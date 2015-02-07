@@ -1,18 +1,15 @@
-from django.contrib.auth.models import User
 from django.contrib.gis.db import models
 
-
-class UserProfile(models.Model):
-    user = models.OneToOneField(User)
-
-    address = models.TextField(blank=True)
-    phone_number = models.CharField(max_length=11, blank=True)
-    avatar = models.ImageField(blank=True)
-
-    date_last_seen = models.DateTimeField(blank=True, null=True)
+from feedback.models import Badge
+from profiles.models import WalkerProfile, OwnerProfile
 
 
 class Pet(models.Model):
+    """
+    The Pet Model
+
+    """
+
     DOG = 'dog'
     CAT = 'cat'
     SPECIES_CHOICES = (
@@ -85,44 +82,17 @@ class Pet(models.Model):
     vet_number = models.CharField(max_length=11, blank=True)
     date_joined = models.DateTimeField(blank=True, null=True)
 
-    owner = models.ForeignKey(User, blank=True, null=True, on_delete=models.CASCADE)
-
-
-class Badge(models.Model):
-    name = models.CharField(max_length=255)
-
-    users = models.ManyToManyField(User)
-    pets = models.ManyToManyField('Pet')
+    badges = models.ManyToManyField(Badge)
+    owner = models.ForeignKey(OwnerProfile)
 
 
 class Pack(models.Model):
+    """
+    A model to associate a Walker to group of Pets
+
+    """
+
     name = models.CharField(max_length=255)
 
-    leader = models.ForeignKey(User)
+    leader_profile = models.ForeignKey(WalkerProfile)
     pets = models.ManyToManyField('Pet')
-
-
-class Walk(models.Model):
-    UNHAPPY = 'unhappy'
-    SATISFIED = 'satisfied'
-    HAPPY = 'happy'
-
-    SATISFACTION_CHOICES = (
-        (UNHAPPY, UNHAPPY),
-        (SATISFIED, SATISFIED),
-        (HAPPY, HAPPY),
-    )
-
-    description = models.CharField(max_length=255)
-    start_datetime = models.DateTimeField()
-    end_datetime = models.DateTimeField()
-    pickup_lon = models.FloatField()
-    pickup_lat = models.FloatField()
-    end_lon = models.FloatField()
-    end_lat = models.FloatField()
-    walkers_notes = models.TextField(blank=True)
-    satisfaction = models.CharField(max_length=15, choices=SATISFACTION_CHOICES)
-    owners_notes = models.TextField(blank=True)
-
-    walked_by = models.ForeignKey(User, related_name='walks_given', blank=True, null=True, on_delete=models.SET_NULL)
-    feedback_by = models.ForeignKey(User, related_name='feedback_given', blank=True, null=True, on_delete=models.SET_NULL)

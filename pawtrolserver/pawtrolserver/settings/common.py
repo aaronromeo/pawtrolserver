@@ -51,8 +51,10 @@ INSTALLED_APPS = (
     'djcelery',
 
     # Me! Me! Me!
-    # 'api',
-    'core',
+    'common',
+    'feedback',
+    'profiles',
+    'petservices',
 
     # This has been moved after the installation of the app as the rest_framework.authtoken
     # requires the 'app' migrations to run before it can complete.

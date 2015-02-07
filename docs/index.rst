@@ -11,7 +11,11 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   modules/models
+   modules/billing
+   modules/common
+   modules/feedback
+   modules/petservices
+   modules/profiles
 
 Indices and tables
 ==================
