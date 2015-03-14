@@ -19,7 +19,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 # See https://docs.djangoproject.com/en/1.7/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '%=h=o1hb&dj1vqh6^puy=xw!rb%-=22psfdvf#_aypjujmfo2o'
+SECRET_KEY = os.getenv('SECRET_KEY', '%=h=o1hb&dj1vqh6^puy=xw!rb%-=22psfdvf#_aypjujmfo2o')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = bool(os.getenv('DEBUG', 0))
@@ -35,6 +35,8 @@ PROJECT_ROOT = os.path.abspath(
 )
 
 # Application definition
+
+AUTH_USER_MODEL = 'profiles.User'
 
 INSTALLED_APPS = (
     'django.contrib.admin',
@@ -52,8 +54,11 @@ INSTALLED_APPS = (
 
     # Me! Me! Me!
     'common',
+    'profiles',    
+    'pets',
+    'api',
+    'billing',
     'feedback',
-    'profiles',
     'petservices',
 
     # This has been moved after the installation of the app as the rest_framework.authtoken

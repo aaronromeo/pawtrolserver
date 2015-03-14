@@ -1,6 +1,7 @@
 from django.contrib.gis.db import models
+from django.core.exceptions import ValidationError
 
-from common.models import Pet
+from pets.models import Pet
 from profiles.models import WalkerProfile, OwnerProfile
 
 
@@ -66,19 +67,37 @@ class OnWalkNote(models.Model):
     Tracking for notifications which happen during a walk
 
     '''
-
     PEE = 'pee'
     POOP = 'poop'
     ALERT = 'alert'
+    ENERGY_LEVEL = 'energy-level'
+    SOCIAL_RATING = 'social-rating'
+    OBEDIENCE_RATING = 'obedience-rating'
+    MOOD = 'mood'
+
+    RATING_CHOICES = (
+        (ENERGY_LEVEL, ENERGY_LEVEL),
+        (SOCIAL_RATING, SOCIAL_RATING),
+        (OBEDIENCE_RATING, OBEDIENCE_RATING),
+        (MOOD, MOOD),
+    )
 
     NOTIFICATION_TYPE_CHOICES = (
         (PEE, PEE),
         (POOP, POOP),
-        (POOP, POOP),
+        (ALERT, ALERT),
     )
 
-    notification_type = models.CharField(max_length=15, choices=NOTIFICATION_TYPE_CHOICES)
+    notification_type = models.CharField(max_length=100, choices=NOTIFICATION_TYPE_CHOICES + RATING_CHOICES)
     time = models.DateTimeField(auto_now_add=True)
+    rating = models.DecimalField(max_digits=2, decimal_places=2, null=True)
     note = models.TextField(blank=True)
 
     pet_walk = models.ForeignKey('PetWalk')
+
+    def clean(self):
+        super(OnWalkNote, self).clean()
+        if self.notification_type in OnWalkNote.RATING_CHOICES and self.rating is None:
+            raise ValidationError({'rating': 'Value of type of notification should be have the rating set'})
+        elif self.notification_type==ALERT and self.note is None:
+            raise ValidationError({'note': 'Value of type of notification should be have a note populated'})

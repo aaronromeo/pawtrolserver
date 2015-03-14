@@ -1,0 +1,6 @@
+CREATE USER pawtrolserveradmin WITH ENCRYPTED PASSWORD 'kaxqJ8PYbcVkWsqCVvpL9YtPRTnC' CREATEDB;
+CREATE DATABASE pawtrolserver WITH ENCODING 'UTF-8' OWNER pawtrolserveradmin;
+GRANT ALL PRIVILEGES ON DATABASE pawtrolserver TO pawtrolserveradmin;
+\c pawtrolserver
+CREATE EXTENSION postgis;
+CREATE EXTENSION postgis_topology;

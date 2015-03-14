@@ -7,7 +7,7 @@ from django.db import models, migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('profiles', '0001_initial'),
+        ('feedback', '0001_initial'),
     ]
 
     operations = [
@@ -16,7 +16,6 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('name', models.CharField(max_length=255)),
-                ('leader_profile', models.ForeignKey(to='profiles.WalkerProfile')),
             ],
             options={
             },
@@ -42,16 +41,10 @@ class Migration(migrations.Migration):
                 ('vet_name', models.CharField(max_length=255, blank=True)),
                 ('vet_number', models.CharField(max_length=11, blank=True)),
                 ('date_joined', models.DateTimeField(null=True, blank=True)),
-                ('owner', models.ForeignKey(to='profiles.OwnerProfile')),
+                ('badges', models.ManyToManyField(to='feedback.Badge')),
             ],
             options={
             },
             bases=(models.Model,),
-        ),
-        migrations.AddField(
-            model_name='pack',
-            name='pets',
-            field=models.ManyToManyField(to='common.Pet'),
-            preserve_default=True,
         ),
     ]
