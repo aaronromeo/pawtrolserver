@@ -1,3 +1,4 @@
+from datetime import timedelta
 import uuid
 
 from django.conf import settings
@@ -13,12 +14,29 @@ from feedback.models import Badge
 
 class User(AbstractBaseUser, PermissionsMixin):
     """
-    An abstract base class implementing a fully featured User model with
-    admin-compliant permissions.
-    Username, password and email are required. Other fields are optional.
+    The Pawtrol custom user.
+
+    AbstractBaseUser provides the additional fields
+        password = models.CharField(_('password'), max_length=128)
+        last_login = models.DateTimeField(_('last login'), blank=True, null=True)
+        is_active = True
+
+    PermissionsMixin provides the additional fields
+        is_superuser = models.BooleanField(_('superuser status'), default=False,
+            help_text=_('Designates that this user has all permissions without '
+                        'explicitly assigning them.'))
+        groups = models.ManyToManyField(Group, verbose_name=_('groups'),
+            blank=True, help_text=_('The groups this user belongs to. A user will '
+                                    'get all permissions granted to each of '
+                                    'their groups.'),
+            related_name="user_set", related_query_name="user")
+        user_permissions = models.ManyToManyField(Permission,
+            verbose_name=_('user permissions'), blank=True,
+            help_text=_('Specific permissions for this user.'),
+            related_name="user_set", related_query_name="user")
+
     """
     username = models.CharField(
-        default=uuid.uuid4,
         max_length=36,
         unique=True,
         validators=[
@@ -59,6 +77,10 @@ class User(AbstractBaseUser, PermissionsMixin):
         verbose_name = _('user')
         verbose_name_plural = _('users')
 
+    def __init__(self, *args, **kwargs):
+        super(User, self).__init__(*args, **kwargs)
+        self.username = str(uuid.uuid4()) if not self.username else self.username
+
     def get_full_name(self):
         """
         Returns the first_name plus the last_name, with a space in between.
@@ -77,9 +99,9 @@ class User(AbstractBaseUser, PermissionsMixin):
         send_mail(subject, message, from_email, [self.email], **kwargs)
 
 
-class ProfileBase(models.Model):
+class UserProfile(models.Model):
     '''
-    Abstract class
+    UserProfile containing the information associated with the user which isn't important to authentication
 
     '''
     user = models.OneToOneField(settings.AUTH_USER_MODEL)
@@ -87,23 +109,20 @@ class ProfileBase(models.Model):
     address = models.TextField(blank=True)
     avatar = models.ImageField(blank=True)
 
-    date_last_seen = models.DateTimeField(auto_now_add=True)
-
     badges = models.ManyToManyField(Badge)
 
-    class Meta:
-        abstract = True
 
-
-class OwnerProfile(ProfileBase):
+class OwnerProfile(models.Model):
     '''
     OwnerProfile used to store owner specific information for a user
 
     '''
+    user = models.OneToOneField(settings.AUTH_USER_MODEL)
+
     preferred_walkers = models.ManyToManyField('WalkerProfile')
 
 
-class ServiceProviderProfileBase(ProfileBase):
+class ServiceProviderProfileBase(models.Model):
     '''
     Abstract class
 
@@ -130,8 +149,10 @@ class ServiceProviderProfileBase(ProfileBase):
         (UNSUBSCRIBED, UNSUBSCRIBED),
     )
 
-    subscription_status = models.CharField(max_length=10, choices=SUBSCRIPTION_STATUS_CHOICES)
-    subscription_expiration_date = models.DateTimeField()
+    user = models.OneToOneField(settings.AUTH_USER_MODEL)
+
+    subscription_status = models.CharField(max_length=10, choices=SUBSCRIPTION_STATUS_CHOICES, default=TRIAL)
+    subscription_expiration_date = models.DateTimeField(_('date subscription expires'), default=timezone.now)
 
     class Meta:
         abstract = True
@@ -142,4 +163,8 @@ class WalkerProfile(ServiceProviderProfileBase):
     WalkerProfile used to store walker specific information for a user
 
     '''
-    default_rate_per_walk = models.DecimalField(max_digits=4, decimal_places=1)
+    default_rate_per_hour_walked = models.DecimalField(max_digits=4, decimal_places=1, default=20)
+
+    def __init__(self, *args, **kwargs):
+        super(WalkerProfile, self).__init__(*args, **kwargs)
+        self.subscription_expiration_date = timezone.now() + timedelta(days=60)
