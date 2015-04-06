@@ -4,6 +4,11 @@ from random import randint
 from django.core.management.base import BaseCommand, CommandError
 from profiles.models import *
 from profiles.serializers import *
+from petservices.models import *
+from petservices.serializers import *
+
+
+# TODO: Instqll FactoryBoy and use that.
 
 
 class Command(BaseCommand):
@@ -22,11 +27,11 @@ class Command(BaseCommand):
     def setupWalker(self, fname):
         datestamp = self.datestamp()
         data = {
-            'email': 'walker+{}@pawtrolapp.com'.format(datestamp), 
-            'first_name': fname, 
-            'last_name': 'Walker-{}'.format(datestamp), 
-            'password': 'password123', 
-            'phone_number': '{}'.format(randint(1000000000, 99999999999)), 
+            'email': 'walker+{}@pawtrolapp.com'.format(datestamp),
+            'first_name': fname,
+            'last_name': 'Walker-{}'.format(datestamp),
+            'password': 'password123',
+            'phone_number': '{}'.format(randint(1000000000, 99999999999)),
             'address': '123123'
         }
         userserializer = UserSerializer(data=data)
@@ -41,11 +46,11 @@ class Command(BaseCommand):
     def setupOwner(self, fname):
         datestamp = self.datestamp()
         data = {
-            'email': 'owner+{}@pawtrolapp.com'.format(datestamp), 
-            'first_name': fname, 
-            'last_name': 'Owner-{}'.format(datestamp), 
-            'password': 'password123', 
-            'phone_number': '{}'.format(randint(1000000000, 99999999999)), 
+            'email': 'owner+{}@pawtrolapp.com'.format(datestamp),
+            'first_name': fname,
+            'last_name': 'Owner-{}'.format(datestamp),
+            'password': 'password123',
+            'phone_number': '{}'.format(randint(1000000000, 99999999999)),
             'address': '123123'
         }
         userserializer = UserSerializer(data=data)
@@ -57,13 +62,37 @@ class Command(BaseCommand):
 
         return ownerprofile
 
+    def setupDog(self, name, owner):
+        datestamp = self.datestamp()
+
+        breed_list = ['French Bulldog', 'Boston Terrier', 'Labrador Retriever', 'Poodle', 'Doberman Pincer', 'German Shepard']
+        color_list = [color[0] for color in Dog.COLOR_CHOICES]
+
+        data = {
+            'name': name,
+            'ownerprofile': owner.pk,
+            'primary_breed': breed_list[randint(0, len(breed_list)-1)],
+            'primary_coat_color': color_list[randint(0, len(color_list)-1)],
+        }
+        dogserializer = DogSerializer(data=data)
+        self.test_serializer(dogserializer)
+        dog = dogserializer.save()
+
+        return dog
+
     def _populate(self):
         self.setupWalker('Fred')
         self.setupWalker('Bill')
 
-        self.setupOwner('Ben')
-        self.setupOwner('Jake')
-        self.setupOwner('Jen')
+        ben = self.setupOwner('Ben')
+        jake = self.setupOwner('Jake')
+        jen = self.setupOwner('Jen')
+
+        self.setupDog('Charlie', ben)
+        self.setupDog('Spot', ben)
+        self.setupDog('Goldie', jake)
+        self.setupDog('Whiskey', jen)
+        self.setupDog('Digby', jen)
 
     def handle(self, *args, **options):
         self._populate()

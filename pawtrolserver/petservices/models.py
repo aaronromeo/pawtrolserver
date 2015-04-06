@@ -1,5 +1,6 @@
 from django.contrib.gis.db import models
 from django.core.exceptions import ValidationError
+from django.utils import timezone
 
 from feedback.models import Badge
 from profiles.models import WalkerProfile, OwnerProfile
@@ -11,13 +12,36 @@ class Pet(models.Model):
 
     """
 
-    DOG = 'dog'
-    CAT = 'cat'
-    SPECIES_CHOICES = (
-        (DOG, 'Dog'),
-        (CAT, 'Cat'),
-    )
+    name = models.CharField(max_length=255)
+    dob = models.DateField(null=True)
+    is_dob_estimated = models.BooleanField(default=False)
 
+    # TODO: These should be choices for ease of sorting
+    primary_breed = models.CharField(max_length=255, blank=True)
+    secondary_breed = models.CharField(max_length=255, blank=True)
+    # primary_coat_color = models.CharField(max_length=10)
+    # secondary_coat_color = models.CharField(max_length=10, blank=True)
+    # coat_pattern = models.CharField(max_length=10)
+    description = models.TextField(blank=True)
+    weight = models.DecimalField(max_digits=4, decimal_places=1, null=True)
+    microchip_number = models.CharField(max_length=255, blank=True)
+    avatar = models.ImageField(blank=True)
+    vet_name = models.CharField(max_length=255, blank=True)
+    vet_number = models.CharField(max_length=11, blank=True)
+    date_joined = models.DateTimeField(default=timezone.now)
+
+    badges = models.ManyToManyField(Badge)
+    ownerprofile = models.ForeignKey(OwnerProfile)
+
+    class Meta:
+        abstract = True
+
+
+class Dog(Pet):
+    """
+    The Dog specific Model
+
+    """
     BROWN = 'brown'
     RED = 'red'
     GOLD = 'gold'
@@ -64,27 +88,9 @@ class Pet(models.Model):
         (SABLE, SABLE),
     )
 
-    name = models.CharField(max_length=255)
-    species = models.CharField(max_length=20, choices=SPECIES_CHOICES)
-    dob = models.DateField()
-    is_dob_estimated = models.BooleanField(default=False)
-
-    # TODO: These should be choices for ease of sorting
-    primary_breed = models.CharField(max_length=255)
-    secondary_breed = models.CharField(max_length=255, blank=True)
-    primary_coat_color = models.CharField(max_length=10, choices=COLOR_CHOICES)
+    primary_coat_color = models.CharField(max_length=10, choices=COLOR_CHOICES, blank=True)
     secondary_coat_color = models.CharField(max_length=10, choices=COLOR_CHOICES, blank=True)
-    coat_pattern = models.CharField(max_length=10, choices=PATTERN_CHOICES)
-    description = models.TextField(blank=True)
-    weight = models.DecimalField(max_digits=4, decimal_places=1)
-    microchip_number = models.CharField(max_length=255)
-    avatar = models.ImageField(blank=True)
-    vet_name = models.CharField(max_length=255, blank=True)
-    vet_number = models.CharField(max_length=11, blank=True)
-    date_joined = models.DateTimeField(blank=True, null=True)
-
-    badges = models.ManyToManyField(Badge)
-    owner = models.ForeignKey(OwnerProfile)
+    coat_pattern = models.CharField(max_length=10, choices=PATTERN_CHOICES, blank=True)
 
 
 class WalkerPetMatch(models.Model):
@@ -96,7 +102,7 @@ class WalkerPetMatch(models.Model):
     name = models.CharField(max_length=255)
 
     leader_profile = models.ForeignKey(WalkerProfile)
-    pets = models.ManyToManyField('Pet')
+    dogs = models.ManyToManyField('Dog')
 
 
 class PackWalk(models.Model):
@@ -112,7 +118,7 @@ class PackWalk(models.Model):
     walked_by = models.ForeignKey(WalkerProfile)
 
 
-class PetWalk(models.Model):
+class DogWalk(models.Model):
     '''
     Model used to track walk specific information for a single pet, in addition to the association between a pet,
     an owner's feedback and the walker (via the PackWalk)
@@ -128,7 +134,7 @@ class PetWalk(models.Model):
         (HAPPY, HAPPY),
     )
 
-    pet = models.ForeignKey(Pet)
+    dog = models.ForeignKey(Dog)
     pack_walk = models.ForeignKey('PackWalk')
 
     satisfaction = models.CharField(max_length=15, choices=SATISFACTION_CHOICES)
@@ -187,7 +193,7 @@ class OnWalkNote(models.Model):
     rating = models.DecimalField(max_digits=2, decimal_places=2, null=True)
     note = models.TextField(blank=True)
 
-    pet_walk = models.ForeignKey('PetWalk')
+    dog_walk = models.ForeignKey('DogWalk')
 
     def clean(self):
         super(OnWalkNote, self).clean()
