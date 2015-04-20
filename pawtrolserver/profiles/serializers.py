@@ -53,8 +53,11 @@ class UserSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         profile_data = validated_data.pop('userprofile')
+        password = validated_data.pop('password')
         with transaction.atomic():
             user = User.objects.create(**validated_data)
+            user.set_password(password)
+            user.save()
             UserProfile.objects.create(user=user, **profile_data)
         return user
 
@@ -65,7 +68,8 @@ class UserSerializer(serializers.ModelSerializer):
         except UserProfile.DoesNotExist:
             raise serializers.ValidationError('User is missing user profile')
 
-        instance.password = validated_data.get('password', instance.password)
+        if validated_data.get('password', None):
+            instance.set_password(validated_data.get('password'))
         instance.email = validated_data.get('email', instance.email)
         instance.first_name = validated_data.get('first_name', instance.first_name)
         instance.last_name = validated_data.get('last_name', instance.last_name)

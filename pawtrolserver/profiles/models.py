@@ -8,6 +8,7 @@ from django.core import validators
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
+from django_extensions.db.fields import ShortUUIDField
 # from common.models import UUIDField
 from feedback.models import Badge
 
@@ -36,22 +37,14 @@ class User(AbstractBaseUser, PermissionsMixin):
             related_name="user_set", related_query_name="user")
 
     """
-    username = models.CharField(
-        max_length=36,
+    username = ShortUUIDField(
         unique=True,
-        validators=[
-            validators.RegexValidator(r'^[\w-]+$',
-                                      _('Enter a valid username. '
-                                        'This value may contain only letters, numbers '
-                                        'and @/./+/-/_ characters.'), 'invalid'),
-        ],
         error_messages={
             'unique': _("A user with that slug already exists."),
-        }
+        },
     )
     first_name = models.CharField(_('first name'), max_length=30)
     last_name = models.CharField(_('last name'), max_length=30)
-    # TODO: Replace UUIDField when adpoting Django 1.8
     phone_number = models.CharField(
         max_length=11,
         validators=[
@@ -76,10 +69,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     class Meta:
         verbose_name = _('user')
         verbose_name_plural = _('users')
-
-    def __init__(self, *args, **kwargs):
-        super(User, self).__init__(*args, **kwargs)
-        self.username = str(uuid.uuid4()) if not self.username else self.username
 
     def get_full_name(self):
         """
@@ -129,9 +118,9 @@ class ServiceProviderProfileBase(models.Model):
     Statuses:
 
     TRIAL           - The user is on a trial subscription (and not paying fees).
-    ACTIVE          - The first payment for the subscription is successful. 
+    ACTIVE          - The first payment for the subscription is successful.
     DELINQUENT      - The subscription payment has failed, but the user is still in the grace period.
-    SUSPENDED       - The subscription has been terminated, usually due to a payment issue. 
+    SUSPENDED       - The subscription has been terminated, usually due to a payment issue.
     UNSUBSCRIBED    - The walker has unsubscribed from the service.
 
     '''

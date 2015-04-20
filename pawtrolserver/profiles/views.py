@@ -4,75 +4,80 @@
 
 
 from django.http import Http404
+from django.shortcuts import get_object_or_404
 
 from rest_framework import generics
 from rest_framework import mixins
 from rest_framework import status
 from rest_framework.response import Response
 
+from rest_framework.permissions import IsAdminUser, IsAuthorized
 from rest_framework.views import APIView
 
 from profiles.models import User
+from profiles.permissions import IsObjOwner
 from profiles.serializers import UserSerializer
 
 
-# class UserViewSet(viewsets.ModelViewSet):
-#     """
-#     API endpoint that allows users to be viewed or edited.
-#     """
-#     queryset = User.objects.all()
+# class OwnerDetailView(generics.RetrieveUpdateAPIView):
 #     serializer_class = UserSerializer
 
-
-# class OwnerDetailView(generics.ListCreateAPIView):
-#     queryset = User.objects.filter(ownerprofile__isnull=False)
-#     serializer_class = UserSerializer
-
-#     def get_queryset(self):
-#         user = self.request.user
-#         User.objects.filter(ownerprofile__isnull=False)
+#     def get_object(self):
+#         if not self.request.user:
+#             raise Http404
+#         obj = self.request.user
+#         self.check_object_permissions(self.request, obj)
+#         return obj
 
 
 class OwnerListView(generics.ListCreateAPIView):
-    queryset = User.objects.filter(ownerprofile__isnull=False)
+    # TODO: We need to determine scope of queryset
+    # TODO: Determine correct permissions
     serializer_class = UserSerializer
+    permission_classes = (IsAdminUser,)
 
-
-class UserDetailView(APIView):
-    def get_object(self, pk):
-        try:
-            return User.objects.get(id=pk)
-        except User.DoesNotExist:
+    def get_queryset(self):
+        if not self.request.user:
             raise Http404
 
-    def get(self, request, pk, format=None):
-        user = self.get_object(pk)
-        serializer = UserSerializer(user)
-        return Response(serializer.data)
-
-    def put(self, request, pk, format=None):
-        user = self.get_object(pk)
-        serializer = UserSerializer(user, data=data) #, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, *args, **kwargs):
-        user = self.get_object(pk)
-        user.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        owners = User.objects.filter(ownerprofile__isnull=False)
 
 
-class UserListView(APIView):
-    def get(self, request, format=None):
-        users = User.objects.all()
-        serializer = UserSerializer(users, many=True)
-        return Response(serializer.data)
+class CurrentUserView(generics.RetrieveUpdateAPIView):
+    """
+    API endpoint that allows users to be viewed or edited.
 
-    def post(self, request, format=None):
-        serializer = UserSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    """
+    permission_classes = (IsObjOwner,)
+    serializer_class = UserSerializer
+
+    def get_object(self):
+        if not self.request.user:
+            raise Http404
+        obj = self.request.user
+        self.check_object_permissions(self.request, obj)
+        return obj
+
+class UserDetailView(generics.RetrieveUpdateAPIView):
+    """
+    API endpoint that allows users to be viewed or edited.
+
+    Only intended for admins
+
+    """
+    permission_classes = (IsAdminUser,)
+    serializer_class = UserSerializer
+    queryset = User.objects.all()
+    lookup_field = 'username'
+
+
+class UserListView(generics.ListCreateAPIView):
+    """
+    API endpoint that allows users to be listed or created.
+
+    Only intended for admins
+
+    """
+    permission_classes = (IsAdminUser,)
+    queryset = User.objects.all()
+    serializer_class = UserSerializer

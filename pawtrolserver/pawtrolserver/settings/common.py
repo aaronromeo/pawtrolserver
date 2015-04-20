@@ -54,7 +54,7 @@ INSTALLED_APPS = (
 
     # Me! Me! Me!
     'common',
-    'profiles',    
+    'profiles',
     'api',
     'billing',
     'feedback',
@@ -85,14 +85,14 @@ WSGI_APPLICATION = 'pawtrolserver.wsgi.application'
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,
     # or allow read-only access for unauthenticated users.
-    
+
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
     ),
 
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAdminUser',
-        # 'rest_framework.permissions.IsAuthenticated',
     ),
 }
 
@@ -136,7 +136,7 @@ STATIC_ROOT = os.path.join(os.path.dirname(os.path.dirname(BASE_DIR)), 'static/'
 STATICFILES_DIRS = (
 )
 
-# A subclass of the StaticFilesStorage storage backend which stores the file names it handles by appending the MD5 hash of 
+# A subclass of the StaticFilesStorage storage backend which stores the file names it handles by appending the MD5 hash of
 # the file's content to the filename. For example, the file css/styles.css would also be saved as css/styles.55e7cbb9ba48.css.
 STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.ManifestStaticFilesStorage'
 
@@ -170,7 +170,7 @@ LOGGING = {
         'console': {
             'level': 'WARNING',
             'class': 'logging.StreamHandler',
-        },        
+        },
         'mail_admins': {
             'level': 'WARNING',
             'class': 'django.utils.log.AdminEmailHandler',

@@ -14,5 +14,5 @@ from profiles import views
 
 urlpatterns = [
     url(r'^$', views.UserListView.as_view()),
-    url(r'^(?P<pk>[0-9]+)/$', views.UserDetailView.as_view()),
+    url(r'^(?P<username>[A-Za-z0-9]+)/$', views.UserDetailView.as_view()),
 ]

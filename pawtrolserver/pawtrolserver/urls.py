@@ -5,6 +5,7 @@ from rest_framework.urlpatterns import format_suffix_patterns
 
 # from api import urls as api_urls
 from profiles import urls as profiles_urls
+from profiles.views import CurrentUserView, OwnerListView
 
 
 admin.autodiscover()
@@ -18,6 +19,10 @@ urlpatterns = patterns('',
 
     # url(r'^', include(api_urls)),
     url(r'^profiles/', include(profiles_urls)),
+
+    url(r'^profile/', CurrentUserView.as_view()),
+    url(r'^owners/', OwnerListView.as_view()),
+
 )
 
 urlpatterns = format_suffix_patterns(urlpatterns)
