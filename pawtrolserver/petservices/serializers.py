@@ -6,8 +6,17 @@ from petservices.models import (
     Dog,
 )
 
+from profiles.models import (
+    OwnerProfile,
+)
+
 
 class DogSerializer(serializers.ModelSerializer):
+    ownerprofile = serializers.SlugRelatedField(
+        queryset=OwnerProfile.objects.all(),
+        slug_field='user__username',
+    )
+
     class Meta:
         model = Dog
         fields = (

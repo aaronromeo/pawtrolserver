@@ -2,6 +2,7 @@ from datetime import datetime
 from random import randint
 
 from django.core.management.base import BaseCommand, CommandError
+
 from profiles.models import *
 from profiles.serializers import *
 from petservices.models import *
@@ -24,6 +25,22 @@ class Command(BaseCommand):
         if not serializer.is_valid():
             raise CommandError('Serializer not valid: {}'.format(serializer.errors))
 
+    def setupBusness(self, business_name, walker):
+        datestamp = self.datestamp()
+        data = {
+            'business_name': '{}+{}'.format(business_name, datestamp),
+            'business_owner': walker.user.username,
+        }
+        businessserializer = ServiceBusinessSerializer(data=data)
+        self.test_serializer(businessserializer)
+        business = businessserializer.save()
+
+        walkerserializer = WalkerProfileSerializer(walker, data={'businesses': [business.uuid, ]}, partial=True)
+        self.test_serializer(walkerserializer)
+        walkerserializer.save()
+
+        return business
+
     def setupWalker(self, fname):
         datestamp = self.datestamp()
         data = {
@@ -37,7 +54,11 @@ class Command(BaseCommand):
         userserializer = UserSerializer(data=data)
         self.test_serializer(userserializer)
         user = userserializer.save()
-        walkerserializer = WalkerProfileSerializer(data={'user': user.pk})
+        walkerserializer = WalkerProfileSerializer(
+            data={
+                'user': user.username
+            }
+        )
         self.test_serializer(walkerserializer)
         walkerprofile = walkerserializer.save()
 
@@ -56,7 +77,11 @@ class Command(BaseCommand):
         userserializer = UserSerializer(data=data)
         self.test_serializer(userserializer)
         user = userserializer.save()
-        ownerserializer = OwnerProfileSerializer(data={'user': user.pk})
+        ownerserializer = OwnerProfileSerializer(
+            data={
+                'user': user.username,
+            }
+        )
         self.test_serializer(ownerserializer)
         ownerprofile = ownerserializer.save()
 
@@ -70,7 +95,7 @@ class Command(BaseCommand):
 
         data = {
             'name': name,
-            'ownerprofile': owner.pk,
+            'ownerprofile': owner.user.username,
             'primary_breed': breed_list[randint(0, len(breed_list)-1)],
             'primary_coat_color': color_list[randint(0, len(color_list)-1)],
         }
@@ -81,8 +106,13 @@ class Command(BaseCommand):
         return dog
 
     def _populate(self):
-        self.setupWalker('Fred')
-        self.setupWalker('Bill')
+        User.objects.create_superuser(username='aaron', email='aaron@pawtrol.com', password='password123')
+
+        fred = self.setupWalker('Fred')
+        self.setupBusness('Fred likes to walk', fred)
+
+        bill = self.setupWalker('Bill')
+        self.setupBusness('Bill digs your dogs', bill)
 
         ben = self.setupOwner('Ben')
         jake = self.setupOwner('Jake')

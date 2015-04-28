@@ -9,7 +9,7 @@ from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
 from django_extensions.db.fields import ShortUUIDField
-# from common.models import UUIDField
+
 from feedback.models import Badge
 
 
@@ -107,11 +107,10 @@ class OwnerProfile(models.Model):
 
     '''
     user = models.OneToOneField(settings.AUTH_USER_MODEL)
-
     preferred_walkers = models.ManyToManyField('WalkerProfile')
 
 
-class ServiceProviderProfileBase(models.Model):
+class ServiceBusiness(models.Model):
     '''
     Abstract class
 
@@ -138,10 +137,26 @@ class ServiceProviderProfileBase(models.Model):
         (UNSUBSCRIBED, UNSUBSCRIBED),
     )
 
-    user = models.OneToOneField(settings.AUTH_USER_MODEL)
+    uuid = ShortUUIDField(
+        unique=True,
+        error_messages={
+            'unique': _("A business with that UUID already exists."),
+        },
+    )
+
+    business_name = models.CharField(_('business name'), blank=False, null=False, max_length=200)
+    business_owner = models.ForeignKey(
+        'User',
+        help_text=_('Setup so that a business can be assoiciated to any user regardless of whether they have a business profile')
+    )
 
     subscription_status = models.CharField(max_length=10, choices=SUBSCRIPTION_STATUS_CHOICES, default=TRIAL)
     subscription_expiration_date = models.DateTimeField(_('date subscription expires'), default=timezone.now)
+
+
+class ServiceProviderProfileBase(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL)
+    businesses = models.ManyToManyField('ServiceBusiness')
 
     class Meta:
         abstract = True

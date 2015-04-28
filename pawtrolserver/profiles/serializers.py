@@ -7,10 +7,23 @@ from profiles.models import (
     User,
     UserProfile,
     WalkerProfile,
+    ServiceBusiness,
 )
 
 
 from rest_framework.fields import empty
+
+
+class ServiceBusinessSerializer(serializers.ModelSerializer):
+    business_owner = serializers.SlugRelatedField(
+        queryset=User.objects.all(),
+        slug_field='username',
+    )
+
+    class Meta:
+        model = ServiceBusiness
+        fields = ('pk', 'uuid', 'business_name', 'business_owner', 'subscription_status', 'subscription_expiration_date', )
+        read_only_fields = ('pk', 'uuid', 'subscription_status', 'subscription_expiration_date')
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
@@ -84,7 +97,10 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class OwnerProfileSerializer(serializers.ModelSerializer):
-    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    user = serializers.SlugRelatedField(
+        queryset=User.objects.all(),
+        slug_field='username',
+    )
 
     class Meta:
         model = OwnerProfile
@@ -93,9 +109,18 @@ class OwnerProfileSerializer(serializers.ModelSerializer):
 
 
 class WalkerProfileSerializer(serializers.ModelSerializer):
-    user = serializers.PrimaryKeyRelatedField(queryset=User.objects.all())
+    user = serializers.SlugRelatedField(
+        queryset=User.objects.all(),
+        slug_field='username',
+    )
+    businesses = serializers.SlugRelatedField(
+        many=True,
+        queryset=ServiceBusiness.objects.all(),
+        required=False,
+        slug_field='uuid',
+    )
 
     class Meta:
         model = WalkerProfile
-        fields = ('pk', 'user', 'subscription_status', 'subscription_expiration_date', 'default_rate_per_hour_walked')
+        fields = ('pk', 'user', 'businesses', 'default_rate_per_hour_walked')
         read_only_fields = ('pk',)
